@@ -1,0 +1,70 @@
+---
+- name: 開発用Macの標準ソフトウェアを導入
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    # localhostでもHomebrew版Ansible自身のPythonを使う。
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+    # Homebrewで導入するCLI。macOS標準のawk/sed/grep/find等は追加しない。
+    homebrew_formulae:
+      - git
+      - gh
+      - container
+      - jq
+      - ripgrep
+      - fd
+      - shellcheck
+
+    # GUIアプリ。ログイン、TCC、VPN/System Extension等の初回承認は人間が行う。
+    homebrew_casks:
+      - firefox
+      - visual-studio-code
+      - bitwarden
+      - signal
+      - discord
+      - tailscale-app
+      - google-drive
+      - chatgpt
+
+  pre_tasks:
+    - name: macOSかつApple Siliconであることを確認
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.system == "Darwin"
+          - ansible_facts.architecture == "arm64"
+        fail_msg: "このPlaybookはApple Silicon Mac専用です。"
+
+    - name: macOSバージョンを取得
+      ansible.builtin.command: /usr/bin/sw_vers -productVersion
+      register: macos_version
+      changed_when: false
+
+    - name: macOS 26以降であることを確認
+      ansible.builtin.assert:
+        that:
+          - macos_version.stdout is version('26.0', '>=')
+        fail_msg: "macOS 26以降を前提としています。現在: {{ macos_version.stdout }}"
+
+  tasks:
+    - name: CLIツールを導入
+      community.general.homebrew:
+        name: "{{ homebrew_formulae }}"
+        state: present
+
+    - name: GUIアプリを導入
+      community.general.homebrew_cask:
+        name: "{{ homebrew_casks }}"
+        state: present
+        # pkg型Caskが必要とするsudo用。Homebrew自体をrootでは実行しない。
+        sudo_password: "{{ ansible_become_password | default(omit) }}"
+
+  post_tasks:
+    - name: 初回手動設定を案内
+      ansible.builtin.debug:
+        msg:
+          - "ソフトウェア導入完了。"
+          - "Apple containerは必要に応じて 'container system start' を実行してください。"
+          - "Tailscale / Google Drive / Bitwarden / Signal / Discord / ChatGPT / VS Codeの初回ログインやOS権限承認は手動で行います。"
