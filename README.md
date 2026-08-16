@@ -88,10 +88,10 @@ Homebrewの標準prefixはApple Siliconでは`/opt/homebrew`です。
 ### 2. Playbookを実行
 
 ```bash
-ansible-playbook --ask-become-pass playbook.yml
+ansible-playbook playbook.yml
 ```
 
-不足しているCLIツールとGUIアプリをHomebrewで導入します。`--ask-become-pass`で入力した管理者passwordは、Google DriveやTailscaleなどpkg型Caskのinstallerがsudoを必要とする場合にだけ使います。Homebrew自体をrootで実行するためのものではありません。
+不足しているCLIツールとGUIアプリをHomebrewで導入します。実行時に`pkg型Cask導入用のmacOS管理者パスワード`を非表示で入力します。このpasswordは、Google DriveやTailscaleなどpkg型Caskのinstallerがsudoを必要とする場合にだけ`homebrew_cask`へ渡します。Homebrew自体をrootで実行するためのものではありません。
 
 このPlaybookは`state: present`を使います。既に入っているソフトウェアを毎回強制upgradeしたり、versionを固定したりしません。
 
@@ -137,7 +137,7 @@ software listを変更した場合や、状態を確認したい場合は再度�
 
 ```bash
 ./bootstrap.sh
-ansible-playbook --ask-become-pass playbook.yml
+ansible-playbook playbook.yml
 ./verify.sh
 ```
 
@@ -158,7 +158,7 @@ macOSの初期設定
   ↓
 ./bootstrap.sh
   ↓
-ansible-playbook --ask-become-pass playbook.yml
+ansible-playbook playbook.yml
   ↓
 ./verify.sh
   ↓

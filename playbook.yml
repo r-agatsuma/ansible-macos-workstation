@@ -29,6 +29,11 @@
       - google-drive
       - chatgpt
 
+  vars_prompt:
+    - name: homebrew_cask_sudo_password
+      prompt: "pkg型Cask導入用のmacOS管理者パスワード"
+      private: true
+
   pre_tasks:
     - name: macOSかつApple Siliconであることを確認
       ansible.builtin.assert:
@@ -59,7 +64,7 @@
         name: "{{ homebrew_casks }}"
         state: present
         # pkg型Caskが必要とするsudo用。Homebrew自体をrootでは実行しない。
-        sudo_password: "{{ ansible_become_password | default(omit) }}"
+        sudo_password: "{{ homebrew_cask_sudo_password }}"
 
   post_tasks:
     - name: 初回手動設定を案内
