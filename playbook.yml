@@ -28,6 +28,7 @@
       - tailscale-app
       - google-drive
       - chatgpt
+      - obsidian
 
   vars_prompt:
     - name: homebrew_cask_sudo_password
@@ -73,3 +74,4 @@
           - "ソフトウェア導入完了。"
           - "Apple containerは必要に応じて 'container system start' を実行してください。"
           - "Tailscale / Google Drive / Bitwarden / Signal / Discord / ChatGPT / VS Codeの初回ログインやOS権限承認は手動で行います。"
+          - "ObsidianはGoogle Drive上の既存Vaultを手動で開きます。"

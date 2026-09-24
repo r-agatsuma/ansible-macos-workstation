@@ -41,6 +41,7 @@ Mac固有の細かな設定差は許容します。2台のMacを完全なクロ�
 | `tailscale-app` | Tailscale |
 | `google-drive` | Google Drive |
 | `chatgpt` | ChatGPTデスクトップアプリ（Codexを含む） |
+| `obsidian` | Obsidian |
 
 Codexは現在のChatGPTデスクトップアプリに統合されているため、専用の旧Codexアプリではなく`chatgpt` Caskを導入します。
 
@@ -57,6 +58,7 @@ Codexは現在のChatGPTデスクトップアプリに統合されているた�
 - Google DriveのログインとOS側の権限承認
 - Bitwarden / Signal / Discord / ChatGPTのログイン
 - VS Codeの設定・Extension・Settings Sync
+- Obsidian VaultとVault内の設定 (`.obsidian`)
 - SSH秘密鍵や開発データ
 - Git repositoryのrestore
 
@@ -129,7 +131,7 @@ Google Driveを起動してGoogle Accountへログインします。File Provide
 
 ### その他
 
-Bitwarden、Signal、Discord、ChatGPT、VS Codeも必要に応じてログイン・同期します。
+Bitwarden、Signal、Discord、ChatGPT、VS Codeも必要に応じてログイン・同期します。ObsidianはGoogle Drive上の既存Vaultを手動で開きます。
 
 ## 日常の再適用
 

@@ -44,7 +44,7 @@ for pkg in "${formulae[@]}"; do
   fi
 done
 
-casks=(firefox visual-studio-code bitwarden signal discord tailscale-app google-drive chatgpt)
+casks=(firefox visual-studio-code bitwarden signal discord tailscale-app google-drive chatgpt obsidian)
 for app in "${casks[@]}"; do
   if brew list --cask "$app" >/dev/null 2>&1; then
     pass "cask: $app"
