@@ -1,7 +1,7 @@
 #!/bin/bash
 set -u
 
-# Playbookの責務である「ソフトウェアが存在すること」だけを確認する。
+# ソフトウェアの存在とGoツール用のPATHブロックを確認する。
 # アプリのログイン状態やmacOSの権限設定は検査しない。
 
 fail=0
@@ -35,7 +35,7 @@ else
   warn_msg "Rosetta 2が見つかりません（arm64-only運用ならcontainer自体は利用可能）"
 fi
 
-formulae=(git gh container jq ripgrep fd shellcheck)
+formulae=(git gh container jq ripgrep fd shellcheck go tmux)
 for pkg in "${formulae[@]}"; do
   if brew list --formula "$pkg" >/dev/null 2>&1; then
     pass "formula: $pkg"
@@ -44,7 +44,7 @@ for pkg in "${formulae[@]}"; do
   fi
 done
 
-casks=(firefox visual-studio-code bitwarden signal discord tailscale-app google-drive chatgpt obsidian)
+casks=(firefox visual-studio-code bitwarden signal discord tailscale-app google-drive chatgpt codex obsidian)
 for app in "${casks[@]}"; do
   if brew list --cask "$app" >/dev/null 2>&1; then
     pass "cask: $app"
@@ -52,6 +52,35 @@ for app in "${casks[@]}"; do
     fail_msg "caskが未導入: $app"
   fi
 done
+
+if go_gopath=$(go env GOPATH) && [[ -n "$go_gopath" ]]; then
+  go_bin_dir="${go_gopath%%:*}/bin"
+  if [[ -f "$go_bin_dir/iro" && -x "$go_bin_dir/iro" ]]; then
+    pass "iro: $go_bin_dir/iro"
+  else
+    fail_msg "iroが存在しないか実行できません: $go_bin_dir/iro"
+  fi
+
+  # .zshrcを実行せず、Ansibleのquoteフィルタと同じシェル引用を検証する。
+  quoted_go_bin_dir="$go_bin_dir"
+  if [[ "$go_bin_dir" == *[!a-zA-Z0-9_@%+=:,./-]* ]]; then
+    escaped_quote="'\"'\"'"
+    quoted_go_bin_dir="'${go_bin_dir//\'/$escaped_quote}'"
+  fi
+  expected_go_block=$(printf '%s\n' \
+    '# BEGIN ANSIBLE MANAGED: Go tools' \
+    "export PATH=$quoted_go_bin_dir:\"\$PATH\"" \
+    '# END ANSIBLE MANAGED: Go tools')
+  if [[ -f "$HOME/.zshrc" ]] && \
+    actual_go_block=$(sed -n '/^# BEGIN ANSIBLE MANAGED: Go tools$/,/^# END ANSIBLE MANAGED: Go tools$/p' "$HOME/.zshrc") && \
+    [[ "$actual_go_block" == "$expected_go_block" ]]; then
+    pass "Goツール用PATHブロック"
+  else
+    fail_msg "$HOME/.zshrcのGoツール用PATHブロックが存在しないか一致しません"
+  fi
+else
+  fail_msg "go env GOPATHを取得できません（iroとPATHブロックを検証できません）"
+fi
 
 if command -v ansible-playbook >/dev/null 2>&1; then
   pass "Ansible"
