@@ -1,6 +1,6 @@
-# mac-dev-setup
+# ansible-macos-workstation
 
-Apple Silicon Macを初期化したあと、開発に必要なCLIツールとGUIアプリを短時間で戻すための小さなAnsible Cookbookです。
+Apple Silicon Macを初期化したあと、個人用ワークステーションとして必要なCLIツールとGUIアプリを短時間で戻すための小さなAnsible Cookbookです。
 
 目的はmacOSを完全に宣言的管理することではありません。**ソフトウェアだけをだいたい同じ状態に戻し、それ以外はmacOSと人間に任せる**方針です。
 
@@ -8,7 +8,7 @@ Apple Silicon Macを初期化したあと、開発に必要なCLIツールとGUI
 
 - Apple Silicon (`arm64`)
 - macOS 26以降
-- 個人用の開発Mac
+- 個人用の開発ワークステーション
 - Homebrew + Ansibleによるローカル構成管理
 
 Mac固有の細かな設定差は許容します。2台のMacを完全なクローンにはしません。
