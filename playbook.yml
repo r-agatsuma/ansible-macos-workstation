@@ -8,7 +8,7 @@
     # localhostでもHomebrew版Ansible自身のPythonを使う。
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
-    # Homebrewで導入するCLI。macOS標準のawk/sed/grep/find等は追加しない。
+    # Homebrew Formula。macOS標準のawk/sed/grep/find等は追加しない。
     homebrew_formulae:
       - git
       - gh
@@ -17,8 +17,10 @@
       - ripgrep
       - fd
       - shellcheck
+      - go
+      - tmux
 
-    # GUIアプリ。ログイン、TCC、VPN/System Extension等の初回承認は人間が行う。
+    # Homebrew Cask（CLIも含む）。ログインやOSの初回承認は人間が行う。
     homebrew_casks:
       - firefox
       - visual-studio-code
@@ -28,6 +30,7 @@
       - tailscale-app
       - google-drive
       - chatgpt
+      - codex
       - obsidian
 
   vars_prompt:
@@ -55,17 +58,45 @@
         fail_msg: "macOS 26以降を前提としています。現在: {{ macos_version.stdout }}"
 
   tasks:
-    - name: CLIツールを導入
+    - name: Homebrew Formulaを導入
       community.general.homebrew:
         name: "{{ homebrew_formulae }}"
         state: present
 
-    - name: GUIアプリを導入
+    - name: Homebrew Caskを導入
       community.general.homebrew_cask:
         name: "{{ homebrew_casks }}"
         state: present
         # pkg型Caskが必要とするsudo用。Homebrew自体をrootでは実行しない。
         sudo_password: "{{ homebrew_cask_sudo_password }}"
+
+    - name: Goの実効GOPATHを取得
+      ansible.builtin.command: go env GOPATH
+      register: go_gopath
+      changed_when: false
+      check_mode: false
+
+    - name: 最初のGOPATHからGoバイナリディレクトリを設定
+      ansible.builtin.set_fact:
+        go_bin_dir: "{{ go_gopath.stdout.split(':')[0] }}/bin"
+
+    - name: iroが未導入の場合にインストール
+      ansible.builtin.command:
+        argv:
+          - go
+          - install
+          - github.com/r-agatsuma/iro/cmd/iro@latest
+        creates: "{{ go_bin_dir }}/iro"
+      environment:
+        GOBIN: "{{ go_bin_dir }}"
+
+    - name: 対話的zsh用にGoツールのPATHブロックを管理
+      ansible.builtin.blockinfile:
+        path: "{{ ansible_facts.user_dir }}/.zshrc"
+        create: true
+        marker: "# {mark} ANSIBLE MANAGED: Go tools"
+        block: |
+          export PATH={{ go_bin_dir | quote }}:"$PATH"
 
   post_tasks:
     - name: 初回手動設定を案内

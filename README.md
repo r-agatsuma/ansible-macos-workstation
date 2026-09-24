@@ -15,7 +15,7 @@ Mac固有の細かな設定差は許容します。2台のMacを完全なクロ�
 
 ## 管理するもの
 
-### CLI
+### Homebrew Formula
 
 | パッケージ | 用途 |
 | --- | --- |
@@ -26,10 +26,12 @@ Mac固有の細かな設定差は許容します。2台のMacを完全なクロ�
 | `ripgrep` | 高速な全文検索 (`rg`) |
 | `fd` | ファイル検索 |
 | `shellcheck` | shell scriptの静的解析 |
+| `go` | Go toolchain |
+| `tmux` | ターミナル多重化 |
 
 `awk`、`sed`、`grep`、`find`、`curl`、`ssh`、`rsync`などはmacOS標準のものを使います。GNU版への依存を標準環境へ持ち込まない方針です。
 
-### GUI
+### Homebrew Cask
 
 | Cask | アプリ |
 | --- | --- |
@@ -40,10 +42,29 @@ Mac固有の細かな設定差は許容します。2台のMacを完全なクロ�
 | `discord` | Discord |
 | `tailscale-app` | Tailscale |
 | `google-drive` | Google Drive |
-| `chatgpt` | ChatGPTデスクトップアプリ（Codexを含む） |
+| `chatgpt` | ChatGPTデスクトップアプリ |
+| `codex` | Codex CLI |
 | `obsidian` | Obsidian |
 
-Codexは現在のChatGPTデスクトップアプリに統合されているため、専用の旧Codexアプリではなく`chatgpt` Caskを導入します。
+CodexはCLIですが、Homebrew Caskの`codex`で配布されています。ChatGPTデスクトップアプリの`chatgpt` Caskも引き続き導入します。
+
+### Go-installed tools
+
+| ツール | インストール元 |
+| --- | --- |
+| `iro` | `github.com/r-agatsuma/iro/cmd/iro@latest` |
+
+`go env GOPATH`で実効GOPATHを取得し、複数のエントリがある場合は先頭の`bin`ディレクトリに`iro`を導入します。インストール時の`GOBIN`をこのディレクトリに指定するため、既存の`GOBIN`設定には依存しません。システムやHomebrewのバイナリディレクトリへは移動しません。期待する場所に`iro`が無い場合だけ`go install github.com/r-agatsuma/iro/cmd/iro@latest`を実行し、既存のバイナリは毎回更新しません。
+
+Ansibleは`~/.zshrc`の以下の専用ブロックだけを管理し、その他の既存内容を保持します。ファイルが無ければ作成します。PATHには実際に解決したGoバイナリディレクトリをシェル用に引用して設定します。
+
+```sh
+# BEGIN ANSIBLE MANAGED: Go tools
+export PATH="<resolved GOPATH bin>:$PATH"
+# END ANSIBLE MANAGED: Go tools
+```
+
+再適用してもブロックは重複しません。PATHの反映には新しい対話的zshセッションを開いてください。既に実行中のシェルへの即時反映は不要です。
 
 ## 管理しないもの
 
@@ -61,6 +82,10 @@ Codexは現在のChatGPTデスクトップアプリに統合されているた�
 - Obsidian VaultとVault内の設定 (`.obsidian`)
 - SSH秘密鍵や開発データ
 - Git repositoryのrestore
+- `.zshrc`全体や汎用dotfiles管理
+- tmuxの設定
+- Codexのログイン・設定
+- iroのプロジェクト設定
 
 秘密情報をこのrepositoryへ保存しないでください。
 
@@ -93,7 +118,7 @@ Homebrewの標準prefixはApple Siliconでは`/opt/homebrew`です。
 ansible-playbook playbook.yml
 ```
 
-不足しているCLIツールとGUIアプリをHomebrewで導入します。実行時に`pkg型Cask導入用のmacOS管理者パスワード`を非表示で入力します。このpasswordは、Google DriveやTailscaleなどpkg型Caskのinstallerがsudoを必要とする場合にだけ`homebrew_cask`へ渡します。Homebrew自体をrootで実行するためのものではありません。
+不足しているHomebrew Formula / CaskとGo経由のiroを導入し、Goツール用のPATHブロックを設定します。実行時に`pkg型Cask導入用のmacOS管理者パスワード`を非表示で入力します。このpasswordは、Google DriveやTailscaleなどpkg型Caskのinstallerがsudoを必要とする場合にだけ`homebrew_cask`へ渡します。Homebrew自体をrootで実行するためのものではありません。
 
 このPlaybookは`state: present`を使います。既に入っているソフトウェアを毎回強制upgradeしたり、versionを固定したりしません。
 
@@ -103,7 +128,7 @@ ansible-playbook playbook.yml
 ./verify.sh
 ```
 
-Homebrew Formula / CaskとAnsibleの存在を確認します。ログイン状態やmacOSの権限状態は検査対象外です。
+Homebrew Formula / CaskとAnsibleの存在、動的に解決したGOPATHの先頭の`bin/iro`の存在と実行権限、`~/.zshrc`のGoツール用PATHブロックを確認します。現在のシェルのPATHが未反映でもiroを検証できます。ログイン状態やmacOSの権限状態は検査対象外です。
 
 ## 初回だけ人間が行う作業
 
